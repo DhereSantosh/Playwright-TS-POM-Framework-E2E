@@ -1,4 +1,5 @@
 import { test as base, expect, Page, TestInfo } from '@playwright/test';
+import * as fs from 'fs';
 import { PlaywrightFactory } from '../factory/PlaywrightFactory';
 import { PIMPage } from '@pages/PIMPage';
 import { EmployeeListPage } from '@pages/EmployeeListPage';
@@ -27,6 +28,12 @@ export class BaseTest
         : projectName && validBrowsers.includes(projectName)? projectName
         : 'chromium';
 
+    if (useAuth && !fs.existsSync(BaseTest.AUTH_FILE)) {
+      throw new Error(
+        `Auth file "${BaseTest.AUTH_FILE}" not found. Make sure the "setup" project runs before authenticated tests.`
+      );
+    }
+
     const statePath = useAuth ? BaseTest.AUTH_FILE : undefined;
     const factory = await PlaywrightFactory.create(browserName, statePath);
     return new BaseTest(factory, factory.page);
@@ -54,30 +61,35 @@ export const test_hooks = base.extend<MyFixtures>({
     baseTest: async ({}, use, testInfo) => {
         const isSetup  = testInfo.project.name === 'setup';
         const baseTest =  await BaseTest.openBrowser(testInfo, !isSetup);
-
-        await use(baseTest);
+      try {
+          await use(baseTest);
         // Capture and attach screenshot with Test Name + Timestamp on failure
         if (testInfo.status !== testInfo.expectedStatus) {
-            // Replace spaces and special characters in test title so it is safe for filenames
-      const safeTestName = testInfo.title.replace(/[^a-zA-Z0-9_-]/g, '_');
-          // Format local date & time as YYYY-MM-DD_HH-MM-SS
-      const timestamp = new Date()
-        .toLocaleString('sv-SE')
-        .replace(' ', '_')
-        .replace(/:/g, '-');
+            try{
+                  // Replace spaces and special characters in test title so it is safe for filenames
+                  const safeTestName = testInfo.title.replace(/[^a-zA-Z0-9_-]/g, '_');
+                  //Format local date & time as YYYY-MM-DD_HH-MM-SS
+                  const timestamp = new Date()
+                      .toLocaleString('sv-SE')
+                      .replace(' ', '_')
+                      .replace(/:/g, '-');
 
-        const attachmentName = `${safeTestName}_${timestamp}`;
+                  const attachmentName = `${safeTestName}_${timestamp}`;
+                  const screenshot = await baseTest.page.screenshot({ fullPage: true });
 
-      const screenshot = await baseTest.page.screenshot({ fullPage: true });
-      await testInfo.attach(attachmentName, {
-        body: screenshot,
-        contentType: 'image/png',
-      });
-    }
-
-        // Automatic afterEach cleanup (runs even if the test fails)
+                    await testInfo.attach(attachmentName, {
+                      body: screenshot,
+                      contentType: 'image/png',
+                    });
+                } catch (screenshotError) {
+                    console.warn('Could not capture failure screenshot:', screenshotError);
+                  }
+          }
+      } finally {
+        // Guarantees browser closes even if a test or screenshot throws an error
         await baseTest.closeBrowser();
-        },
+        }
+    },
 
         // Exposes `appPage` directly so tests don't even have to type `baseTest.page`
     appPage: async ({ baseTest }, use, testInfo) => {

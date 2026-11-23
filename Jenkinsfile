@@ -29,10 +29,17 @@ pipeline {
     }
 
     stages {
+        stage('Clean Previous Artifacts') {
+            steps {
+                bat 'if exist allure-results rmdir /s /q allure-results'
+                bat 'if exist .auth rmdir /s /q .auth'
+            }
+        }
+
         stage('Install Dependencies & Browsers') {
             steps {
                 bat 'npm ci'
-                bat 'npx playwright install --with-deps'
+                bat 'npx playwright install ${params.BROWSER}'
             }
         }
 
