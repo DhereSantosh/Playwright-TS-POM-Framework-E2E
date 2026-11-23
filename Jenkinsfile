@@ -39,7 +39,7 @@ pipeline {
         stage('Install Dependencies & Browsers') {
             steps {
                 bat 'npm ci'
-                bat 'npx playwright install ${params.BROWSER}'
+                bat "npx playwright install ${params.BROWSER}"
             }
         }
 
