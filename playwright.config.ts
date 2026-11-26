@@ -18,7 +18,7 @@ export default defineConfig({
     timeout: 10000, // Give assertions 10 seconds to wait for slow API responses
   },
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -42,7 +42,9 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'https://opensource-demo.orangehrmlive.com',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: 'on', // 'retain-on-failure' to keep traces only for failed tests. And 
+                 // 'on-first-retry' to keep traces for the first retry of failed tests.
+                 // 'on' to always keep traces for all tests.
   },
 
   /* Configure projects for major browsers */

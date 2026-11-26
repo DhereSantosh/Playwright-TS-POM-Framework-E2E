@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { PlaywrightFactory } from '../factory/PlaywrightFactory';
 import { PIMPage } from '@pages/PIMPage';
 import { EmployeeListPage } from '@pages/EmployeeListPage';
+import { AddEmpPage } from '@pages/AddEmpPage';
 
 export class BaseTest
 {
@@ -53,6 +54,7 @@ type MyFixtures = {
   appPage: Page;
   employeeListPage: EmployeeListPage;
   pimPage: PIMPage;
+  addEmployeePage: AddEmpPage;
 };
 
 export const test_hooks = base.extend<MyFixtures>({
@@ -107,6 +109,10 @@ export const test_hooks = base.extend<MyFixtures>({
 
     pimPage: async ({ appPage }, use) => {
         await use(new PIMPage(appPage));
+    },
+
+    addEmployeePage: async ({ appPage }, use) => {
+        await use(new AddEmpPage(appPage));
     },
           
     });
